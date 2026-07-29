@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MONEY BET - Crash & Apple Of Fortune</title>
+    <style>
+        :root {
+            --bg-main: #0c101d;
+            --bg-panel: #13192b;
+            --bg-card: #1a2238;
+            --primary-orange: #ff5500;
+            --header-red: #e74c3c;
+            --text-light: #e1e8ed;
+            --border-color: #232d48;
+            --green-win: #00ff88;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+        body { background-color: var(--bg-main); color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+        /* HEADER */
+        header { background: #070a14; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--primary-orange); }
+        .logo { font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; }
+        .logo span { color: var(--primary-orange); }
+        .nav-tabs { display: flex; gap: 10px; }
+        .tab-btn { background: var(--bg-panel); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary-orange); border-color: var(--primary-orange); }
+        .user-nav { display: flex; align-items: center; gap: 15px; }
+        .balance-box { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 6px; font-weight: bold; color: var(--green-win); }
+        .btn-action { padding: 8px 16px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; color: #fff; }
+        .btn-deposit { background: #28a745; }
+        .btn-withdraw { background: var(--primary-orange); }
+
+        /* MAIN CONTAINER */
+        .container { display: flex; flex: 1; padding: 15px; gap: 15px; height: calc(100vh - 60px); }
+
+        /* --- GAME 1: CRASH LAYOUT --- */
+        #crash-game-view { display: flex; width: 100%; gap: 15px; }
+        .crash-left-section { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* CANVAS ANIMATION BOX (MATCHING IMAGE DESIGN) */
+        .graph-box { background: #090c19; border-radius: 10px; border: 1px solid var(--border-color); height: 350px; position: relative; overflow: hidden; }
+        .rules-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: 1px solid #ff5500; color: #ff8800; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; z-index: 10; }
+        .multiplier-display-canvas { position: absolute; bottom: 20px; right: 25px; font-size: 65px; font-weight: 900; color: #ffffff; text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 10; font-family: sans-serif; }
+
+        /* BETTING & HISTORY PANEL */
+        .crash-bottom-panel { display: flex; gap: 15px; flex: 1; }
+        .bet-box-container { display: flex; flex-direction: column; gap: 10px; width: 280px; }
+        .bet-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .auto-toggle { background: #1f2942; border: 1px solid var(--primary-orange); color: var(--primary-orange); border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; width: fit-content; }
+        .input-row { display: flex; align-items: center; background: #0c101d; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 8px; }
+        .input-row input { background: transparent; border: none; color: #fff; width: 100%; text-align: right; padding: 6px; font-size: 16px; font-weight: bold; outline: none; }
+        .presets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .btn-preset { background: #1c2640; border: 1px solid var(--border-color); color: #fff; padding: 6px; border-radius: 4px; font-size: 12px; cursor: pointer; text-align: center; }
+        .btn-preset:hover { background: #28365a; }
+        .btn-bet-main { background: var(--primary-orange); color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 15px; cursor: pointer; text-align: center; }
+
+        /* HISTORY CENTER BOX */
+        .history-box { flex: 1; background: var(--bg-panel); border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
+        .history-header { background: #2b3854; padding: 10px; font-size: 13px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 6px; }
+        .history-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c7a9c; font-size: 14px; }
+
+        /* LIVE BETS RIGHT SIDEBAR */
+        .live-sidebar { width: 320px; background: var(--bg-panel); border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
+        .live-header { background: #d94b38; padding: 10px; color: #fff; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; }
+        .live-table-head { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; padding: 8px 10px; background: #182035; font-size: 11px; color: #8a98b8; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .live-table-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        .live-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; padding: 6px 10px; font-size: 11px; border-bottom: 1px solid #161f33; text-align: center; }
+        .live-row.win { color: var(--green-win); }
+
+        /* --- GAME 2: APPLE OF FORTUNE LAYOUT --- */
+        #apple-game-view { display: none; width: 100%; justify-content: center; align-items: center; background: radial-gradient(circle, #0e2a1b 0%, #050d08 100%); border-radius: 12px; border: 1px solid #1a4d31; position: relative; overflow: hidden; }
+        .apple-board-container { display: flex; flex-direction: column-reverse; gap: 8px; padding: 20px; z-index: 2; width: 100%; max-width: 450px; }
+        .apple-row { display: flex; align-items: center; gap: 10px; justify-content: center; }
+        .apple-mult-tag { width: 65px; background: rgba(0,0,0,0.6); border: 1px solid #28a745; color: #fff; font-size: 12px; font-weight: bold; padding: 5px; border-radius: 4px; text-align: center; }
+        .apple-items { display: flex; gap: 8px; }
+        .apple-btn { width: 52px; height: 52px; border-radius: 50%; background: #1e5233; border: 2px solid #2ecc71; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        .apple-btn:hover { transform: scale(1.08); background: #276942; }
+        .apple-controls { position: absolute; bottom: 20px; left: 20px; background: rgba(13, 25, 18, 0.9); border: 1px solid #28a745; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; width: 250px; }
+
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; display: none; justify-content: center; align-items: center; }
+        .modal-card { background: var(--bg-panel); border: 1px solid var(--primary-orange); border-radius: 8px; width: 90%; max-width: 400px; padding: 20px; position: relative; }
+        .modal-close { position: absolute; top: 10px; left: 15px; font-size: 20px; cursor: pointer; color: #aaa; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); background: #0c101d; color: #fff; outline: none; }
+        
+        .file-upload-wrapper { position: relative; width: 100%; }
+        .file-upload-input { display: none; }
+        .file-upload-label { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px; background: #0c101d; border: 1px dashed var(--primary-orange); border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .file-upload-label:hover { background: #141c30; }
+        .image-preview { width: 100%; max-height: 120px; object-fit: contain; margin-top: 8px; display: none; border-radius: 4px; border: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header>
+        <div class="logo">MONEY <span>BET</span></div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" id="tab-crash" onclick="switchGame('crash')">✈️ Crash</button>
+            <button class="tab-btn" id="tab-apple" onclick="switchGame('apple')">🍎 Apple of Fortune</button>
+        </div>
+        <div class="user-nav">
+            <div class="balance-box" id="user-balance">0.00 EGP</div>
+            <button class="btn-action btn-deposit" onclick="openModal('deposit-modal')">إيداع</button>
+            <button class="btn-action btn-withdraw" onclick="openModal('withdraw-modal')">سحب</button>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- ==================== GAME 1: CRASH ==================== -->
+        <div id="crash-game-view">
+            <div class="crash-left-section">
+                
+                <!-- CUSTOM CANVAS GRAPH AREA -->
+                <div class="graph-box" id="graph-container">
+                    <button class="rules-btn">الأحكام و الشروط</button>
+                    <div class="multiplier-display-canvas" id="crash-mult">1.00x</div>
+                    <canvas id="customCrashCanvas"></canvas>
+                </div>
+
+                <!-- BETTING CONTROLS & HISTORY -->
+                <div class="crash-bottom-panel">
+                    <div class="bet-box-container">
+                        <!-- CARD 1 -->
+                        <div class="bet-card">
+                            <button class="auto-toggle">تمكين التشغيل التلقائي</button>
+                            <div class="input-row">
+                                <input type="number" id="stake-1" value="0" placeholder="أقل مبلغ 20">
+                                <span style="color:#aaa; font-size:14px; cursor:pointer;" onclick="document.getElementById('stake-1').value=0">✕</span>
+                            </div>
+                            <div class="presets-grid">
+                                <div class="btn-preset" onclick="addStake(1, 20)">20</div>
+                                <div class="btn-preset" onclick="addStake(1, 50)">50</div>
+                                <div class="btn-preset" onclick="addStake(1, 100)">100</div>
+                                <div class="btn-preset" onclick="addStake(1, 400)">400</div>
+                                <div class="btn-preset" onclick="addStake(1, 1000)">1000</div>
+                                <div class="btn-preset" onclick="addStake(1, 5000)">5000</div>
+                            </div>
+                            <button class="btn-bet-main" id="btn-bet-1" onclick="handleCrashBet(1)">وضع الرهان<br><span style="font-size:10px; font-weight:normal;">(أقل رهان 20 EGP)</span></button>
+                        </div>
+
+                        <!-- CARD 2 -->
+                        <div class="bet-card">
+                            <button class="auto-toggle">تمكين التشغيل التلقائي</button>
+                            <div class="input-row">
+                                <input type="number" id="stake-2" value="0" placeholder="أقل مبلغ 20">
+                                <span style="color:#aaa; font-size:14px; cursor:pointer;" onclick="document.getElementById('stake-2').value=0">✕</span>
+                            </div>
+                            <div class="presets-grid">
+                                <div class="btn-preset" onclick="addStake(2, 20)">20</div>
+                                <div class="btn-preset" onclick="addStake(2, 50)">50</div>
+                                <div class="btn-preset" onclick="addStake(2, 100)">100</div>
+                                <div class="btn-preset" onclick="addStake(2, 400)">400</div>
+                                <div class="btn-preset" onclick="addStake(2, 1000)">1000</div>
+                                <div class="btn-preset" onclick="addStake(2, 5000)">5000</div>
+                            </div>
+                            <button class="btn-bet-main" id="btn-bet-2" onclick="handleCrashBet(2)">وضع الرهان<br><span style="font-size:10px; font-weight:normal;">(أقل رهان 20 EGP)</span></button>
+                        </div>
+                    </div>
+
+                    <!-- HISTORY CENTER -->
+                    <div class="history-box">
+                        <div class="history-header">⏰ السجل</div>
+                        <div class="history-content" id="history-content">
+                            <div style="font-size:40px; margin-bottom:10px; opacity:0.3;">📑</div>
+                            <div>لم تقم بوضع أي رهان بعد</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LIVE BETS RIGHT SIDEBAR -->
+            <div class="live-sidebar">
+                <div class="live-header">
+                    <span>عدد الرهانات: <strong id="live-count">942</strong></span>
+                    <span>مجموع الرهانات: <strong id="live-total">EGP 56176.32</strong></span>
+                </div>
+                <div class="live-table-head">
+                    <div>المستخدم</div>
+                    <div>الفرص</div>
+                    <div>الرهان</div>
+                    <div>الأرباح</div>
+                </div>
+                <div class="live-table-body" id="live-table-body"></div>
+            </div>
+        </div>
+
+        <!-- ==================== GAME 2: APPLE OF FORTUNE ==================== -->
+        <div id="apple-game-view">
+            <div class="apple-board-container" id="apple-board"></div>
+            <div class="apple-controls">
+                <div style="color:var(--primary-orange); font-weight:bold; font-size:16px; text-align:center;">Apple of Fortune</div>
+                <div class="form-group">
+                    <label>مبلغ الرهان (الحد الأدنى 20):</label>
+                    <input type="number" id="apple-stake-input" value="0" placeholder="20">
+                </div>
+                <button class="btn-bet-main" id="btn-apple-start" onclick="startAppleGame()">بدء اللعبة 🍏</button>
+                <button class="btn-action btn-deposit" id="btn-apple-cashout" style="display:none; padding:12px;" onclick="cashoutApple()">سحب الأرباح 💰</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="deposit-modal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeModal('deposit-modal')">✕</span>
+            <div style="color:var(--primary-orange); font-weight:bold; font-size:18px; margin-bottom:15px; text-align:center;">إيداع رصيد</div>
+            <div style="background:#0c101d; padding:10px; border-radius:4px; text-align:center; margin-bottom:10px;">
+                <div style="font-size:12px; color:#aaa;">رقم التحويل (كاش):</div>
+                <div style="font-size:18px; color:var(--green-win); font-weight:bold; direction:ltr;">01115082872</div>
+            </div>
+            <div class="form-group"><label>المبلغ المراد إيداعه (EGP):</label><input type="number" id="dep-amount" placeholder="500"></div>
+            <div class="form-group">
+                <label>رفع صورة الإيصال / السكرين شوت:</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="dep-receipt" class="file-upload-input" accept="image/*" onchange="previewReceipt(this)">
+                    <label for="dep-receipt" class="file-upload-label" id="file-label">📁 <span>اختر صورة الإيصال</span></label>
+                </div>
+                <img id="receipt-preview" class="image-preview" alt="معاينة الإيصال">
+            </div>
+            <button class="btn-bet-main" style="width:100%; margin-top:10px;" onclick="submitDeposit()">تأكيد الإيداع</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="withdraw-modal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeModal('withdraw-modal')">✕</span>
+            <div style="color:var(--primary-orange); font-weight:bold; font-size:18px; margin-bottom:15px; text-align:center;">سحب الأرباح</div>
+            <div class="form-group"><label>رقم المحفظة:</label><input type="text" id="with-phone" placeholder="01xxxxxxxxx"></div>
+            <div class="form-group"><label>المبلغ المراد سحبه:</label><input type="number" id="with-amount" placeholder="500"></div>
+            <button class="btn-action btn-withdraw" style="width:100%; padding:12px;" onclick="submitWithdraw()">تأكيد السحب</button>
+        </div>
+    </div>
+
+    <script>
+        const MIN_BET = 20;
+        let userBalance = 0.00;
+        updateBalanceUI();
+
+        function updateBalanceUI() { document.getElementById('user-balance').innerText = userBalance.toFixed(2) + ' EGP'; }
+
+        function switchGame(game) {
+            document.getElementById('tab-crash').classList.remove('active');
+            document.getElementById('tab-apple').classList.remove('active');
+            document.getElementById('crash-game-view').style.display = 'none';
+            document.getElementById('apple-game-view').style.display = 'none';
+
+            if(game === 'crash') {
+                document.getElementById('tab-crash').classList.add('active');
+                document.getElementById('crash-game-view').style.display = 'flex';
+                resizeCanvas();
+            } else {
+                document.getElementById('tab-apple').classList.add('active');
+                document.getElementById('apple-game-view').style.display = 'flex';
+                initAppleBoard();
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function previewReceipt(input) {
+            const preview = document.getElementById('receipt-preview');
+            const label = document.getElementById('file-label');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    label.querySelector('span').innerText = input.files[0].name;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        /* --- دالة الإيداع المحدثة: تقوم بإضافة الرصيد فوراً للحساب --- */
+        function submitDeposit() {
+            let amt = parseFloat(document.getElementById('dep-amount').value);
+            let fileInput = document.getElementById('dep-receipt');
+
+            if(!amt || amt < 20) {
+                alert('يرجى إدخال مبلغ إيداع صحيح (الحد الأدنى 20 EGP)!');
+                return;
+            }
+
+            if(!fileInput.files || fileInput.files.length === 0) {
+                alert('يرجى إرفاق صورة إيصال التحويل أولاً!');
+                return;
+            }
+
+            // إضـافة المبلغ المباشر إلى رصيد المستخدم
+            userBalance += amt;
+            updateBalanceUI();
+
+            alert(`تم رفع الإيصال بنجاح وإضافة EGP ${amt.toFixed(2)} إلى حسابك!`);
+            closeModal('deposit-modal');
+
+            // تفريغ المدخلات بعد النجاح
+            document.getElementById('dep-amount').value = '';
+            fileInput.value = '';
+            document.getElementById('receipt-preview').style.display = 'none';
+            document.getElementById('file-label').querySelector('span').innerText = 'اختر صورة الإيصال';
+        }
+
+        function submitWithdraw() {
+            let amt = parseFloat(document.getElementById('with-amount').value);
+            if(amt > 0 && amt <= userBalance) { 
+                userBalance -= amt; 
+                updateBalanceUI(); 
+                closeModal('withdraw-modal'); 
+                alert('تم إرسال طلب السحب بنجاح!'); 
+            } else { 
+                alert('الرصيد غير كافٍ!'); 
+            }
+        }
+
+        /* ================= CUSTOM CANVAS CRASH DESIGN ================= */
+        const canvas = document.getElementById('customCrashCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = document.getElementById('graph-container');
+            if(container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                drawCrashGraph(0);
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        let progress = 0; // 0 to 1
+        let isCrashRunning = false, currentMult = 1.0, crashInterval;
+        let activeBet1 = 0, activeBet2 = 0;
+
+        function drawPlane(x, y, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 15;
+
+            ctx.fillStyle = '#ffbb00';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 18, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffa000';
+            ctx.beginPath();
+            ctx.moveTo(-5, 0);
+            ctx.lineTo(5, -12);
+            ctx.lineTo(10, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(16, -8, 2, 16);
+
+            ctx.restore();
+        }
+
+        function drawBackground() {
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bgGrad.addColorStop(0, '#0a0d1a');
+            bgGrad.addColorStop(1, '#11182d');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#10162b';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for(let i=0; i<=canvas.width; i+=80) {
+                ctx.lineTo(i, canvas.height - (Math.sin(i * 0.01) * 30 + 40));
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.fill();
+        }
+
+        function drawCrashGraph(p) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+
+            if(p <= 0) return;
+
+            let startX = 20;
+            let startY = canvas.height - 20;
+            let endX = startX + (canvas.width - 80) * p;
+            let endY = startY - (canvas.height - 100) * Math.pow(p, 0.8);
+
+            let controlX = startX + (endX - startX) * 0.5;
+            let controlY = startY;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+            ctx.lineTo(endX, startY);
+            ctx.closePath();
+
+            let fillGrad = ctx.createLinearGradient(0, endY, 0, startY);
+            fillGrad.addColorStop(0, 'rgba(255, 85, 0, 0.45)');
+            fillGrad.addColorStop(1, 'rgba(255, 85, 0, 0.0)');
+            ctx.fillStyle = fillGrad;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+            ctx.strokeStyle = '#ffaa00';
+            ctx.lineWidth = 4;
+            ctx.shadowColor = '#ff5500';
+            ctx.shadowBlur = 12;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            let tangentX = 2 * (1 - p) * (controlX - startX) + 2 * p * (endX - controlX);
+            let tangentY = 2 * (1 - p) * (controlY - startY) + 2 * p * (endY - controlY);
+            let angle = Math.atan2(tangentY, tangentX);
+
+            drawPlane(endX, endY, angle);
+        }
+
+        function addStake(cardId, val) {
+            let input = document.getElementById('stake-' + cardId);
+            input.value = parseFloat(input.value || 0) + val;
+        }
+
+        function handleCrashBet(cardId) {
+            let stake = parseFloat(document.getElementById('stake-' + cardId).value || 0);
+            let btn = document.getElementById('btn-bet-' + cardId);
+
+            if(!isCrashRunning) {
+                if(stake < MIN_BET) { alert(`الحد الأدنى للرهان هو ${MIN_BET} EGP!`); return; }
+                if(stake > userBalance) { alert('رصيدك غير كافٍ! يرجى الإيداع أولاً.'); return; }
+
+                userBalance -= stake; updateBalanceUI();
+
+                if(cardId === 1) activeBet1 = stake;
+                if(cardId === 2) activeBet2 = stake;
+
+                btn.innerText = 'سحب الأرباح 💰';
+                btn.style.background = '#28a745';
+
+                startCrashRound();
+            } else {
+                let bet = cardId === 1 ? activeBet1 : activeBet2;
+                if(bet > 0) {
+                    let win = bet * currentMult;
+                    userBalance += win; updateBalanceUI();
+                    alert(`تم السحب عند x${currentMult.toFixed(2)} - الربح: EGP ${win.toFixed(2)}`);
+                    if(cardId === 1) activeBet1 = 0;
+                    if(cardId === 2) activeBet2 = 0;
+                    btn.innerText = 'تم السحب بنجاح';
+                    btn.style.background = '#6c7a9c';
+                }
+            }
+        }
+
+        function startCrashRound() {
+            if(isCrashRunning) return;
+            isCrashRunning = true;
+            currentMult = 1.0;
+            progress = 0;
+            let crashPoint = (Math.random() * 4 + 1.1).toFixed(2);
+
+            crashInterval = setInterval(() => {
+                currentMult += 0.03;
+                progress += 0.008;
+                if(progress > 0.95) progress = 0.95;
+
+                document.getElementById('crash-mult').innerText = currentMult.toFixed(2) + 'x';
+                drawCrashGraph(progress);
+
+                if(currentMult >= crashPoint) {
+                    clearInterval(crashInterval);
+                    document.getElementById('crash-mult').innerText = '💥 انفجرت!';
+                    document.getElementById('crash-mult').style.color = '#ff3333';
+                    isCrashRunning = false;
+                    activeBet1 = 0; activeBet2 = 0;
+                    
+                    setTimeout(() => {
+                        document.getElementById('btn-bet-1').innerText = 'وضع الرهان';
+                        document.getElementById('btn-bet-1').style.background = 'var(--primary-orange)';
+                        document.getElementById('btn-bet-2').innerText = 'وضع الرهان';
+                        document.getElementById('btn-bet-2').style.background = 'var(--primary-orange)';
+                        document.getElementById('crash-mult').style.color = '#ffffff';
+                        drawCrashGraph(0);
+                    }, 2000);
+                }
+            }, 80);
+        }
+
+        function generateLiveBets() {
+            const body = document.getElementById('live-table-body');
+            body.innerHTML = '';
+            for(let i=0; i<18; i++) {
+                let user = Math.floor(Math.random()*89+10) + '*******';
+                let bet = (Math.random()*500 + 20).toFixed(2);
+                let isWin = Math.random() > 0.6;
+                let mult = isWin ? (Math.random()*3 + 1.2).toFixed(2) : '0';
+                let win = isWin ? (bet * mult).toFixed(2) : '0';
+
+                let row = document.createElement('div');
+                row.className = 'live-row ' + (isWin ? 'win' : '');
+                row.innerHTML = `<div>${user}</div><div>x${mult}</div><div>EGP ${bet}</div><div>EGP ${win}</div>`;
+                body.appendChild(row);
+            }
+        }
+        generateLiveBets();
+        setTimeout(resizeCanvas, 200);
+
+        /* ================= APPLE OF FORTUNE LOGIC ================= */
+        const appleMultipliers = [1.93, 2.41, 4.02, 6.71, 11.18, 27.97, 60.93];
+        let currentAppleRow = 0, appleStake = 0, isAppleActive = false;
+
+        function initAppleBoard() {
+            const board = document.getElementById('apple-board');
+            board.innerHTML = '';
+
+            for(let r = 0; r < 7; r++) {
+                let row = document.createElement('div');
+                row.className = 'apple-row';
+                row.id = 'apple-row-' + r;
+
+                let tag = document.createElement('div');
+                tag.className = 'apple-mult-tag';
+                tag.innerText = 'x' + appleMultipliers[r];
+                row.appendChild(tag);
+
+                let items = document.createElement('div');
+                items.className = 'apple-items';
+
+                for(let c = 0; c < 5; c++) {
+                    let btn = document.createElement('div');
+                    btn.className = 'apple-btn';
+                    btn.innerText = '🍏';
+                    btn.onclick = () => selectApple(r, c, btn);
+                    items.appendChild(btn);
+                }
+
+                row.appendChild(items);
+                board.appendChild(row);
+            }
+        }
+
+        function startAppleGame() {
+            let stake = parseFloat(document.getElementById('apple-stake-input').value || 0);
+            if(stake < MIN_BET) { alert(`الحد الأدنى للرهان هو ${MIN_BET} EGP!`); return; }
+            if(stake > userBalance) { alert('رصيدك غير كافٍ! يرجى الإيداع أولاً.'); return; }
+
+            userBalance -= stake; updateBalanceUI();
+            appleStake = stake;
+            currentAppleRow = 0;
+            isAppleActive = true;
+
+            initAppleBoard();
+            document.getElementById('btn-apple-start').style.display = 'none';
+            document.getElementById('btn-apple-cashout').style.display = 'block';
+            document.getElementById('btn-apple-cashout').innerText = `سحب EGP ${(appleStake * appleMultipliers[0]).toFixed(2)}`;
+        }
+
+        function selectApple(r, c, btn) {
+            if(!isAppleActive || r !== currentAppleRow) return;
+
+            let isGood = Math.random() > 0.25;
+            if(isGood) {
+                btn.innerText = '🍎';
+                btn.style.borderColor = '#00ff88';
+
+                currentAppleRow++;
+                if(currentAppleRow >= 7) {
+                    cashoutApple();
+                } else {
+                    document.getElementById('btn-apple-cashout').innerText = `سحب EGP ${(appleStake * appleMultipliers[currentAppleRow]).toFixed(2)}`;
+                }
+            } else {
+                btn.innerText = '☠️';
+                btn.style.borderColor = '#ff0000';
+                alert('تفاحة فاسدة! خسرت الجولة.');
+                endAppleGame();
+            }
+        }
+
+        function cashoutApple() {
+            if(!isAppleActive || currentAppleRow === 0) return;
+            let win = appleStake * appleMultipliers[currentAppleRow - 1];
+            userBalance += win; updateBalanceUI();
+            alert(`مبروك! فزت بـ EGP ${win.toFixed(2)}`);
+            endAppleGame();
+        }
+
+        function endAppleGame() {
+            isAppleActive = false;
+            document.getElementById('btn-apple-start').style.display = 'block';
+            document.getElementById('btn-apple-cashout').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
